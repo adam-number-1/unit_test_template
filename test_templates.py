@@ -3,14 +3,33 @@ from unittest.mock import Mock, patch
 from typing import Any
 
 # test class for module level functions
+# could probably make it one, since the functions differ very little
 class TestModule:
-    # unittest of a side effecting function
     # python -m pytest PATH\FILENAME.py::TestModule::test_FUNCITON
+
+    # SIDE EFFECT VALIDATION
+    # this fixture returns a function, that validates side effects
     @pytest.fixture
-    def setup_teardown(self):
-        # setup
-        yield
-        # teardown
+    def a_validate_side_effect(self) -> bool:
+        def validate(tc_key, *args,**kwargs):
+            if not tc_key:
+                return True
+            else:
+                raise ValueError('Test case is missing side effect validation')
+
+        return validate
+
+    # SETUP TEARDOWN FIXTURE
+    # this sets the and cleans up the tested environment
+    @pytest.fixture
+    def a_setup_teardown(self):
+        def setup_teardown(tc_key, *args,**kwargs):
+            if not tc_key:
+                yield None
+            else:
+                raise ValueError('Test case is missing setup-teardown')
+
+        return setup_teardown
 
     a_test_input_1 = {
         # positional arguments tuple
@@ -22,26 +41,43 @@ class TestModule:
         }
     }
     a_expected_output_1 = (
-        # put none if the side effecting dunction returns nothing
+
     )
-    def a_side_effect_test_1(self, *args, **kwargs) -> bool:
-        return True
+    
+    a_side_effect_key_1 = None
+    a_setup_teardown_key_1 = None
 
     @pytest.mark.parametrize(
-        "test_input,expected_output,side_effect",
-        (a_test_input_1, a_expected_output_1, a_side_effect_test_1)
+        "test_input,expected_output,se_key,st_key",
+        [
+            (
+                a_test_input_1, 
+                a_expected_output_1,
+                a_side_effect_key_1,
+                a_setup_teardown_key_1
+            )
+        ]
     )
     def test_FUNCTION(
         self, 
         test_input, 
         expected_output, 
-        side_effect, 
-        setup_teardown
+        se_key,
+        st_key,
+        side_effect_test,
+        a_setup_teardown
     ):
+        # setup environment
+        st = a_setup_teardown(st_key)
+        next(st)
+
+        # get the result
         result = FUNCTION(
             *test_input['args'],
             **test_input['kwargs']
         )
+        
+        # testing result
         if len(expected_output) == 1:
             assert result == expected_output[0]
         elif len(expected_output) > 1:
@@ -49,8 +85,18 @@ class TestModule:
         else:
             raise ValueError('Empty expected output')
         
-        assert side_effect()
+        # testing the environment changes
+        assert side_effect_test(se_key)
+
+        # environment cleanup
+        try:
+            next(st)
+        except StopIteration:
+            pass
+        else:
+            ValueError('unexpected after teardown state')
         
+
 # testing instance methods, instance creations etc
 class TestClass:
     # python -m pytest PATH\FILENAME.py::TestModule::test_FUNCITON
@@ -106,8 +152,10 @@ class TestClass:
     }
     
     a_side_effect_key_1 = None
-    a_setup_teardown_key = None
+    a_setup_teardown_key_1 = None
 
+    # in future i am to remove method below to separate helper module, because
+    # i am not looking to change it
     @pytest.mark.parametrize(
         "test_input,expected_output,class_,init,attrs",
         [
@@ -118,7 +166,7 @@ class TestClass:
                 a_init_1, 
                 a_attrs_1,
                 a_side_effect_key_1,
-                a_setup_teardown_key
+                a_setup_teardown_key_1
             )
         ]
     )
@@ -135,7 +183,7 @@ class TestClass:
         a_setup_teardown
     ):
         # setup environment
-        st = a_setup_teardown(st)
+        st = a_setup_teardown(st_key)
         next(st)
 
         # initialize tested objects
