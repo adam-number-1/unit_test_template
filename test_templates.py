@@ -4,6 +4,8 @@ from typing import Any
 
 # test class for module level functions
 # could probably make it one, since the functions differ very little
+# but what i dont want is to import stuff, i want to simpy copy
+# maybe i can put the functionality outside and just inject it
 class TestModule:
     # python -m pytest PATH\FILENAME.py::TestModule::test_FUNCITON
 
@@ -64,7 +66,7 @@ class TestModule:
         expected_output, 
         se_key,
         st_key,
-        side_effect_test,
+        a_validate_side_effect,
         a_setup_teardown
     ):
         # setup environment
@@ -86,7 +88,7 @@ class TestModule:
             raise ValueError('Empty expected output')
         
         # testing the environment changes
-        assert side_effect_test(se_key)
+        assert a_validate_side_effect(se_key)
 
         # environment cleanup
         try:
@@ -179,7 +181,7 @@ class TestClass:
         attrs,
         se_key,
         st_key,
-        side_effect_test,
+        a_validate_side_effect,
         a_setup_teardown
     ):
         # setup environment
@@ -211,7 +213,7 @@ class TestClass:
             obj_.__getattribute__(attr_name) == attr_val
 
         # testing the environment changes
-        assert side_effect_test(se_key)
+        assert a_validate_side_effect(se_key)
 
         # environment cleanup
         try:
