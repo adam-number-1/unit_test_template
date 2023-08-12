@@ -87,6 +87,7 @@ class TestModule:
         else:
             raise ValueError('Empty expected output')
         
+        
         # testing the environment changes
         assert a_validate_side_effect(se_key)
 
